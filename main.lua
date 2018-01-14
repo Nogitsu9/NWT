@@ -11,6 +11,9 @@ function love.load()
 	dragging = false
 	resizing = false
 	width, height = love.graphics.getDimensions()
+	savedx, savedty = love.window.getPosition( )
+	savedwidth = width
+	savedheight = height
 	barh = 20
 	buttons = { 
 		quit = {	x = width-barh, 
@@ -36,16 +39,16 @@ function love.load()
 					func = function()
 						if max then
 							max = false
-							love.window.setMode(864, 480, {fullscreen=false,borderless=true})
+							love.window.setMode(savedwidth, savedheight, {fullscreen=false,borderless=true,x=savedx,y=savedty})
 							resize()
 						else
 							max = true
 							local _, _, flags = love.window.getMode()
+							savedx, savedty = love.window.getPosition( )
 						    local newwidth, newheight = love.window.getDesktopDimensions(flags.display)
 							local success = love.window.setMode(newwidth, newheight-40, {fullscreen=false,borderless=true})
 							love.window.setPosition( 0, 0, flags.display )
 							resize()
-							love.mouse.setPosition( newwidth/2, newheight/2 )
 						end
 					end
 				},
@@ -60,7 +63,8 @@ function love.load()
 					func = function()
 						if max then
 							max = false
-							love.window.setMode(864, 480, {fullscreen=false,borderless=true})
+							local tx, ty = love.window.getPosition( )
+							love.window.setMode(savedwidth, savedheight, {fullscreen=false,borderless=true,x=tx,y=ty})
 							resize()
 						end
 						love.window.minimize()
@@ -78,7 +82,9 @@ function love.load()
 						if not dragging then
 							if max then
 								max = false
-								love.window.setMode(864, 480, {fullscreen=false,borderless=true})
+								local tx, ty = love.window.getPosition( )
+								local tempx = tx + width - savedwidth
+								love.window.setMode(savedwidth, savedheight, {fullscreen=false,borderless=true,x=tempx,y=ty})
 								resize()
 							end
 							dragging = true
@@ -95,18 +101,17 @@ function love.load()
 					pressed = love.graphics.newImage("images/resize_pressed.png"),
 					image = love.graphics.newImage("images/resize.png"),
 					func = function()
+						local tx, ty = love.window.getPosition( )
 						if resizing then
 							resizing = false
-							love.window.setMode(width, height, {fullscreen=false,borderless=true,resizable=false})
+							love.window.setMode(width, height, {fullscreen=false,borderless=true,resizable=false,x=tx,y=ty})
+							savedwidth = width
+							savedheight = height
 							buttons.resize.image = buttons.resize.normal
 						else
-							if max then
-								max = false
-								love.window.setMode(864, 480, {fullscreen=false,borderless=true})
-								resize()
-							end
 							resizing = true
-							love.window.setMode(width, height, {fullscreen=false,borderless=true,resizable=true})
+							love.window.setMode(savedwidth, savedheight, {fullscreen=false,borderless=true,resizable=true,minwidth=250,minheight=20,x=tx,y=ty})
+							resize()
 							buttons.resize.image = buttons.resize.pressed
 						end
 					end
